@@ -31,6 +31,42 @@ export default function Home() {
     }));
   };
 
+  // track whether user confirmed the extracted recipe
+  const [isConfirmed, setIsConfirmed] = useState<boolean | null>(null);
+
+  // clear function to reset everything
+  const handleClear = () => {
+    setUrl("");
+    setRecipe(null);
+    setError('');
+    setIsConfirmed(null);
+    setCheckedIngredients({});
+  };
+
+  // confirm recipe function
+  const handleConfirmRecipe = (confirmed: boolean) => {
+    setIsConfirmed(confirmed);
+    if (!confirmed) {
+      // if user says "No", clear the recipe and prompt them to try another link
+      setError("Please check the URL and try extracting again.");
+      setRecipe(null);
+    }
+  };
+
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyIngredients = () => {
+    if (!recipe) return;
+
+    // join all ingredient items into a clean list separated by new lines
+    const textToCopy = recipe.ingredients.join("\n");
+    navigator.clipboard.writeText(textToCopy);
+
+    // visual feedback for 2 seconds
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmittedUrl(url);
@@ -39,6 +75,7 @@ export default function Home() {
     setError("");
     setRecipe(null);
     setCheckedIngredients({});
+    setIsConfirmed(null);
 
     try {
     // send POST request to our API endpoint
@@ -91,30 +128,80 @@ return (
         </button>
       </form>
 
-      {/* 2. error message display */}
+      {/* error message display */}
       {error && (
         <div className="p-4 bg-red-100 border border-red-300 text-red-800 rounded-md mb-4">
           <strong>Error:</strong> {error}
         </div>
       )}
 
-      {/* 3. recipe output card */}
+      {/* recipe output card */}
       {recipe && (
-        <div className="border border-indigo-700 rounded-lg p-6 bg-slate-950 text-slate-100 shadow-xl">
-          <h2 className="text-2xl font-bold text-slate-100 mb-6 border-b border-slate-800 pb-3">{recipe.title}</h2>
+      <div className="border border-indigo-700 rounded-lg p-6 bg-slate-950 text-slate-100 shadow-xl space-y-6">
+
+        {/* Header with Title and Clear Button */}
+        <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-4">
+          <h2 className="text-2xl font-bold text-slate-100">{recipe.title}</h2>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="text-xs px-3 py-1.5 bg-rose-950 hover:bg-rose-900 text-rose-300 rounded border border-rose-800 transition-colors cursor-pointer"
+          >
+            Clear Recipe
+          </button>
+        </div>
+
+        {/* Verification Banner: Asks "Is this correct?" */}
+        {isConfirmed === null && (
+          <div className="p-3.5 bg-indigo-950/70 border border-indigo-800 rounded-lg flex items-center justify-between gap-3 text-sm">
+            <span className="text-indigo-200">Is this the correct recipe you were looking for?</span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => handleConfirmRecipe(true)}
+                className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded transition-colors cursor-pointer text-xs"
+              >
+                Yes, looks good!
+              </button>
+              <button
+                type="button"
+                onClick={() => handleConfirmRecipe(false)}
+                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition-colors cursor-pointer text-xs"
+              >
+                No, try again
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Optional: Show confirmation badge once verified */}
+        {isConfirmed === true && (
+          <div className="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
+            ✓ Recipe Verified
+          </div>
+        )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
             {/* ingredients Section */}
             <div>
-              <h3 className="text-lg font-semibold text-indigo-400 mb-3">Ingredients</h3>
+              <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-indigo-400">Ingredients</h3>
+              <button
+                type="button"
+                onClick={handleCopyIngredients}
+                className="text-xs px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition-colors cursor-pointer"
+              >
+                {copied ? "Copied!" : "Copy List"}
+              </button>
+            </div>
               <ul className="space-y-2">
                 {recipe.ingredients.map((item, index) => {
-                  // 1. Check if this specific item's index is true in state
+                  // check if this specific item's index is true in state
                   const isChecked = Boolean(checkedIngredients[index]);
 
                   return (
                     <li key={index}>
-                      {/* 2. Wrap in a <label> so clicking the text toggles the box */}
+                      {/* wrap in a <label> so clicking the text toggles the box */}
                       <label className="flex items-start gap-3 cursor-pointer select-none">
                         <input
                           type="checkbox"
@@ -122,7 +209,7 @@ return (
                           onChange={() => toggleIngredient(index)}
                           className="mt-1 h-4 w-4 cursor-pointer"
                         />
-                        {/* 3. Apply line-through when isChecked is true */}
+                        {/* apply line through when isChecked is true */}
                         <span className={isChecked ? "line-through text-gray-500" : ""}>
                           {item}
                         </span>

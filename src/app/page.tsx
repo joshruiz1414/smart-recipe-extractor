@@ -21,6 +21,16 @@ export default function Home() {
   // null because there are no errors when the page loads
   const [error, setError] = useState("");
 
+  // ADD THESE 9 LINES RIGHT HERE:
+  const [checkedIngredients, setCheckedIngredients] = useState<Record<number, boolean>>({});
+
+  const toggleIngredient = (index: number) => {
+    setCheckedIngredients((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmittedUrl(url);
@@ -28,6 +38,7 @@ export default function Home() {
     setLoading(true);
     setError("");
     setRecipe(null);
+    setCheckedIngredients({});
 
     try {
     // send POST request to our API endpoint
@@ -96,10 +107,29 @@ return (
             {/* ingredients Section */}
             <div>
               <h3 className="text-lg font-semibold text-indigo-400 mb-3">Ingredients</h3>
-              <ul className="list-disc list-inside space-y-2 text-slate-300">
-                {recipe.ingredients.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
+              <ul className="space-y-2">
+                {recipe.ingredients.map((item, index) => {
+                  // 1. Check if this specific item's index is true in state
+                  const isChecked = Boolean(checkedIngredients[index]);
+
+                  return (
+                    <li key={index}>
+                      {/* 2. Wrap in a <label> so clicking the text toggles the box */}
+                      <label className="flex items-start gap-3 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleIngredient(index)}
+                          className="mt-1 h-4 w-4 cursor-pointer"
+                        />
+                        {/* 3. Apply line-through when isChecked is true */}
+                        <span className={isChecked ? "line-through text-gray-500" : ""}>
+                          {item}
+                        </span>
+                      </label>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 

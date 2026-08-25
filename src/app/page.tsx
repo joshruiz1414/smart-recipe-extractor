@@ -57,24 +57,24 @@ export default function Home() {
 };
 
 return (
-    <main style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem", fontFamily: "sans-serif" }}>
-      <h1>Smart Recipe Extractor</h1>
-      <p>Paste any recipe link below to pull out clean ingredients and instructions.</p>
+    <main className="max-w-3xl mx-auto p-8 font-sans">
+      <h1 className="text-3xl font-bold text-blue-600 mb-2">Smart Recipe Extractor</h1>
+      <p className="text-white-600 mb-6">Paste any recipe link below to pull out clean ingredients and instructions.</p>
 
       {/* link input form */}
-      <form onSubmit={handleSubmit} style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+      <form onSubmit={handleSubmit} className="flex gap-2 mb-6">
         <input
           type="url"
           required
           placeholder="https://www.recipes.com/recipe/..."
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          style={{ flex: 1, padding: "0.75rem", fontSize: "1rem" }}
+          className="flex-1 p-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button
           type="submit"
           disabled={loading}
-          style={{ padding: "0.75rem 1.5rem", fontSize: "1rem", cursor: loading ? "not-allowed" : "pointer" }}
+          className="px-6 py-3 bg-blue-600 text-white text-base font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer"
         >
           {loading ? "Extracting..." : "Extract"}
         </button>
@@ -82,33 +82,33 @@ return (
 
       {/* 2. error message display */}
       {error && (
-        <div style={{ padding: "1rem", background: "#fee2e2", color: "#991b1b", borderRadius: "6px", marginBottom: "1rem" }}>
+        <div className="p-4 bg-red-100 border border-red-300 text-red-800 rounded-md mb-4">
           <strong>Error:</strong> {error}
         </div>
       )}
 
       {/* 3. recipe output card */}
       {recipe && (
-        <div style={{ border: "1px solid #2710d0", borderRadius: "8px", padding: "1.5rem", background: "#00050a" }}>
-          <h2 style={{ marginTop: 0, color: "#e8ecf4" }}>{recipe.title}</h2>
+        <div className="border border-indigo-700 rounded-lg p-6 bg-slate-950 text-slate-100 shadow-xl">
+          <h2 className="text-2xl font-bold text-slate-100 mb-6 border-b border-slate-800 pb-3">{recipe.title}</h2>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", marginTop: "1.5rem" }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
             {/* ingredients Section */}
             <div>
-              <h3>Ingredients</h3>
-              <ul style={{ paddingLeft: "1.2rem", lineHeight: "1.6" }}>
+              <h3 className="text-lg font-semibold text-indigo-400 mb-3">Ingredients</h3>
+              <ul className="list-disc list-inside space-y-2 text-slate-300">
                 {recipe.ingredients.map((item, index) => (
                   <li key={index}>{item}</li>
                 ))}
               </ul>
             </div>
 
-            {/* instructions section */}
+            {/* instructions Section */}
             <div>
-              <h3>Instructions</h3>
-              <ol style={{ paddingLeft: "1.2rem", lineHeight: "1.6" }}>
+              <h3 className="text-lg font-semibold text-indigo-400 mb-3">Instructions</h3>
+              <ol className="list-decimal list-inside space-y-3 text-slate-300">
                 {recipe.instructions.map((step, index) => (
-                  <li key={index} style={{ marginBottom: "0.5rem" }}>{step}</li>
+                  <li key={index} className="leading-relaxed mb-2">{step}</li>
                 ))}
               </ol>
             </div>

@@ -33,6 +33,8 @@ export default function Home() {
     setRecipe(null);
     setError('');
     setIsConfirmed(null);
+    setCheckedIngredients({})
+    setShowWarning(false)
   };
   // confirm recipe function
   const handleConfirmRecipe = (confirmed: boolean) => {
@@ -44,10 +46,44 @@ export default function Home() {
     }
   };
 
+  const [checkedIngredients, setCheckedIngredients] = useState<Record<number, boolean>>({});
+
+  const [showWarning, setShowWarning] = useState(false);
+  const [uncheckedCount, setUncheckedCount] = useState(0);
+
+  const handleToggleIngredient = (index: number) => {
+    setCheckedIngredients((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
+  const handleBeginCooking = () => {
+    if (!recipe){
+      setError("no recipe given");
+      return
+    }
+    const totalIngredients = recipe.ingredients.length;
+    const checkedCount = Object.values(checkedIngredients).filter(Boolean).length;
+    const missing = totalIngredients - checkedCount;
+
+
+    if (missing > 0) {
+      setUncheckedCount(missing);
+      setShowWarning(true);
+    } else {
+      startCookingMode();
+    }
+  };
+
+  const startCookingMode = () => {
+    setShowWarning(false);
+    alert("Entering Cooking Mode! Enjoy preparing your meal.");
+  };
+
   const handleCopyIngredients = () => {
     if (!recipe) return;
 
-    // join all ingredient items into a clean list separated by new lines
     const textToCopy = recipe.ingredients.join("\n");
     navigator.clipboard.writeText(textToCopy);
 
@@ -60,6 +96,8 @@ export default function Home() {
     setError("");
     setRecipe(null);
     setIsConfirmed(null);
+    setCheckedIngredients({})
+    setShowWarning(false)
 
     try {
     // send POST request to our API endpoint
@@ -147,6 +185,7 @@ return (
         <div className="flex flex-col items-center justify-center gap-3 border-b border-slate-800 pb-4 text-center">
           <button
             type="button"
+            onClick={handleBeginCooking}
             className="text-xl px-3 py-1.5 bg-green-950 hover:bg-green-900 text-emerald-400 rounded border border-green-800 transition-colors cursor-pointer"
           >
             Begin Cooking!
@@ -154,12 +193,38 @@ return (
           <h2 className="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
             ✓ Recipe Verified
           </h2>
+          {/* warning for unchecked ingredients */}
+          {showWarning && (
+            <div className="p-4 bg-amber-950/80 border border-amber-800 rounded-lg space-y-3 text-amber-200 text-sm animate-fade-in">
+              <p className="font-medium">
+                ⚠️ You have <span className="font-bold underline">{uncheckedCount} missing ingredient{uncheckedCount > 1 ? "s" : ""}</span> that haven't been checked off! Do you still want to continue?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={startCookingMode}
+                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-semibold rounded text-xs transition-colors cursor-pointer"
+                >
+                  Yes, Continue Anyway
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowWarning(false)}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 text-xs transition-colors cursor-pointer"
+                >
+                  Go Back & Check List
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
 
-          <IngredientList ingredients={recipe.ingredients} />
+          <IngredientList ingredients={recipe.ingredients}
+          checkedIngredients={checkedIngredients}
+          onToggleIngredient={handleToggleIngredient} />
           <Instructions instructions={recipe.instructions} />
           </div>
         </div>

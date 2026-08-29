@@ -4,18 +4,12 @@ import { useState } from "react";
 
 interface IngredientListProps {
   ingredients: string[];
+  checkedIngredients: Record<number, boolean>;
+  onToggleIngredient: (index: number) => void;
 }
 
-export function IngredientList({ ingredients }: IngredientListProps) {
-  const [checkedIngredients, setCheckedIngredients] = useState<Record<number, boolean>>({});
+export function IngredientList({ ingredients, checkedIngredients, onToggleIngredient }: IngredientListProps) {
   const [copied, setCopied] = useState(false);
-
-  const toggleIngredient = (index: number) => {
-    setCheckedIngredients((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
-  };
 
   const handleCopyIngredients = () => {
     const textToCopy = ingredients.join("\n");
@@ -50,7 +44,7 @@ export function IngredientList({ ingredients }: IngredientListProps) {
                 <input
                   type="checkbox"
                   checked={isChecked}
-                  onChange={() => toggleIngredient(index)}
+                  onChange={() => onToggleIngredient(index)}
                   className="mt-1 h-4 w-4 cursor-pointer accent-indigo-500"
                 />
                 <span className={isChecked ? "line-through text-slate-500" : "text-slate-300"}>

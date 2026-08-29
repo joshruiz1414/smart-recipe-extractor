@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     const prompt = `Extract the recipe from this web page content. Return strict JSON with fields "title", "ingredients" (array of strings), and "instructions" (array of strings in order).\n\nText:\n${cleanedText}`;
 
     const aiResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",

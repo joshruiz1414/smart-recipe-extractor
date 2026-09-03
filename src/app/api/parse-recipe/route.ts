@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import * as cheerio from "cheerio";
+import he from "he"
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -53,11 +54,21 @@ export async function POST(req: NextRequest) {
 
         if (recipeNode) {
           const rawInstructions = recipeNode.recipeInstructions || [];
-          const instructions = Array.isArray(rawInstructions)
-            ? rawInstructions.map((step: string | { text: string }) =>
-                typeof step === "string" ? step : step.text || ""
-              )
-            : [rawInstructions];
+            const parsedInstructions = Array.isArray(rawInstructions)
+              ? rawInstructions.map((step: string | { text: string }) =>
+                  typeof step === "string" ? step : step.text || ""
+                )
+              : typeof rawInstructions === "string"
+              ? [rawInstructions]
+              : [];
+
+            const instructions = parsedInstructions
+              .filter(Boolean)
+              .map((step: string) => he.decode(step).trim());
+
+            const ingredients = (recipeNode.recipeIngredient || []).map((item: string) =>
+              he.decode(item).trim()
+            );
 
           extractedRecipe = {
             title: recipeNode.name || "Untitled Recipe",

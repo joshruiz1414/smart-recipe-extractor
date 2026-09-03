@@ -72,8 +72,8 @@ export async function POST(req: NextRequest) {
 
           extractedRecipe = {
             title: recipeNode.name || "Untitled Recipe",
-            ingredients: recipeNode.recipeIngredient || [],
-            instructions: instructions.filter(Boolean),
+            ingredients: ingredients || [],
+            instructions: instructions,
           };
         }
       } catch {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { IngredientList } from "@/components/IngredientList";
 import { Instructions } from "@/components/Instructions";
 import { UrlForm } from "@/components/UrlForm";
+import { CookingMode } from "@/components/CookingMode";
 interface Recipe {
   title: string;
   ingredients: string[];
@@ -26,6 +27,8 @@ export default function Home() {
 
   // track whether user confirmed the extracted recipe
   const [isConfirmed, setIsConfirmed] = useState<boolean | null>(null);
+
+  const [isCookingMode, setIsCookingMode] = useState(false);
 
   // clear function to reset everything
   const handleClear = () => {
@@ -78,7 +81,7 @@ export default function Home() {
 
   const startCookingMode = () => {
     setShowWarning(false);
-    alert("Entering Cooking Mode! Enjoy preparing your meal.");
+    setIsCookingMode(true);
   };
 
   const handleCopyIngredients = () => {
@@ -141,6 +144,13 @@ return (
       )}
 
       {/* recipe output card */}
+      {isCookingMode && recipe && (
+        <CookingMode
+          recipeTitle={recipe.title || "Recipe"}
+          instructions={recipe.instructions}
+          onClose={() => setIsCookingMode(false)}
+        />
+      )}
       {recipe && (
 
       <div className="border border-indigo-700 rounded-lg p-6 bg-slate-950 text-slate-100 shadow-xl space-y-6">

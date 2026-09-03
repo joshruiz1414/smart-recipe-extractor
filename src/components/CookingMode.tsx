@@ -5,102 +5,85 @@ import { useState, useEffect } from "react";
 interface CookingModeProps {
   recipeTitle: string;
   instructions: string[];
+  ingredients: string[];
   onClose: () => void;
 }
 
-export function CookingMode({ recipeTitle, instructions, onClose }: CookingModeProps) {
+
+export function CookingMode({ recipeTitle, instructions, ingredients, onClose }: CookingModeProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
-  // Timer state
-  const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [showIngredients, setShowIngredients] = useState(true);
 
   const currentStep = instructions[currentStepIndex];
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === instructions.length - 1;
 
-  // screen Wake Lock API
+  // prevent background body scrolling while Cooking Mode is open
   useEffect(() => {
-    let wakeLock: WakeLockSentinel | null = null;
+    const originalStyle = window.getComputedStyle(document.body).overflow;
 
-    const requestWakeLock = async () => {
-      try {
-        if ("wakeLock" in navigator) {
-          wakeLock = await navigator.wakeLock.request("screen");
-        }
-      } catch (err) {
-        console.error("Wake Lock error:", err);
-      }
-    };
+    // disable background scrolling
+    document.body.style.overflow = "hidden";
 
-    requestWakeLock();
-
+    // enable background scrolling when Cooking Mode closes
     return () => {
-      if (wakeLock) wakeLock.release();
+      document.body.style.overflow = originalStyle;
     };
   }, []);
 
-  // Parse Timers (Detects "15 minutes", "30 mins", etc.)
-  const detectTimeInStep = (text: string): number | null => {
-    // Regex looking for patterns like "15 minutes", "5 min", "1 hour", etc.
-    const match = text.match(/(\d+)\s*(hour|hr|minute|min)/i);
-    if (!match) return null;
+  // screen Wake Lock API
+useEffect(() => {
+  let wakeLock: WakeLockSentinel | null = null;
 
-    const amount = parseInt(match[1], 10);
-    const unit = match[2].toLowerCase();
-
-    if (unit.startsWith("h")) return amount * 3600;
-    return amount * 60; // default to minutes
-  };
-
-  const detectedSeconds = detectTimeInStep(currentStep);
-
-  // Countdown Interval logic
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-
-    if (isTimerRunning && timerSeconds !== null && timerSeconds > 0) {
-      interval = setInterval(() => {
-        setTimerSeconds((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
-      }, 1000);
-    } else if (timerSeconds === 0) {
-      setIsTimerRunning(false);
+  const requestWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+      }
+    } catch (err) {
+      console.error('Wake Lock error:', err);
     }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isTimerRunning, timerSeconds]);
-
-  // Reset timer when step changes
-  useEffect(() => {
-    setTimerSeconds(null);
-    setIsTimerRunning(false);
-  }, [currentStepIndex]);
-
-  const startTimer = (seconds: number) => {
-    setTimerSeconds(seconds);
-    setIsTimerRunning(true);
   };
 
-  const formatTimerDisplay = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  requestWakeLock();
+
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      requestWakeLock();
+    }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col justify-between p-6 sm:p-10">
-      {/* Top Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-        <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
-            Cooking Mode
-          </span>
-          <h2 className="text-lg font-bold truncate max-w-xs sm:max-w-md text-slate-200">
-            {recipeTitle}
-          </h2>
-        </div>
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  return () => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    wakeLock?.release();
+  };
+}, []);
+
+
+return (
+  <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col justify-between p-6 sm:p-10">
+    {/* Top Header */}
+    <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div>
+        <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
+          Cooking Mode
+        </span>
+        <h2 className="text-lg font-bold truncate max-w-xs sm:max-w-md text-slate-200">
+          {recipeTitle}
+        </h2>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setShowIngredients(!showIngredients)}
+          className="px-3 py-1.5 text-xs bg-indigo-950 hover:bg-indigo-900 text-indigo-300 rounded border border-indigo-800 transition-colors cursor-pointer"
+        >
+          {showIngredients ? "Hide Ingredients" : "View Ingredients"}
+        </button>
         <button
           type="button"
           onClick={onClose}
@@ -109,9 +92,12 @@ export function CookingMode({ recipeTitle, instructions, onClose }: CookingModeP
           ✕ Exit
         </button>
       </div>
+    </div>
+    {/* Center Section: Step Text + Ingredients Panel */}
+    <div className="max-w-8xl mx-auto w-full flex-1 flex flex-col sm:flex-row items-center justify-center gap-8 my-4 min-h-0 overflow-hidden">
 
-      {/* Center: Main Step Display */}
-      <div className="max-w-3xl mx-auto w-full text-center space-y-6 my-auto">
+      {/* Step Text Container */}
+      <div className="flex-1 text-center space-y-6 overflow-y-auto max-h-[65vh] px-4">
         <span className="inline-block px-3 py-1 bg-indigo-950 text-indigo-300 border border-indigo-800 rounded-full text-sm font-medium">
           Step {currentStepIndex + 1} of {instructions.length}
         </span>
@@ -120,71 +106,58 @@ export function CookingMode({ recipeTitle, instructions, onClose }: CookingModeP
           {currentStep}
         </p>
 
-        {/* Dynamic Timer Widget */}
-        {detectedSeconds !== null && (
-          <div className="pt-4">
-            {timerSeconds === null ? (
-              <button
-                type="button"
-                onClick={() => startTimer(detectedSeconds)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-full transition-colors cursor-pointer text-base"
-              >
-                ⏱️ Start Timer ({Math.round(detectedSeconds / 60)} min)
-              </button>
-            ) : (
-              <div className="inline-flex items-center gap-4 bg-slate-900 border border-amber-500/50 px-6 py-3 rounded-full">
-                <span className="text-3xl font-mono font-bold text-amber-400">
-                  {formatTimerDisplay(timerSeconds)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setIsTimerRunning(!isTimerRunning)}
-                  className="px-3 py-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700"
-                >
-                  {isTimerRunning ? "Pause" : "Resume"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTimerSeconds(null)}
-                  className="px-3 py-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 rounded border border-slate-700"
-                >
-                  Reset
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Bottom Controls */}
-      <div className="flex items-center justify-between border-t border-slate-800 pt-4 max-w-3xl mx-auto w-full">
+      {/* Slide out Ingredients Card */}
+      {showIngredients && (
+        <div className="w-full sm:w-80 h-[55vh] max-h-[500px] bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col shrink-0 shadow-2xl">
+          <h3 className="text-sm font-semibold text-indigo-400 mb-3 border-b border-slate-800 pb-2 shrink-0">
+            All Ingredients ({ingredients.length})
+          </h3>
+
+          {/* Dedicated Scroll Container */}
+          <div className="flex-1 overflow-y-auto pr-2 space-y-2 text-sm text-slate-300 min-h-0">
+            <ul className="space-y-2.5">
+              {ingredients.map((item, idx) => (
+                <li key={idx} className="border-b border-slate-800/50 pb-2 last:border-0 leading-snug">
+                  • {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* Bottom Controls */}
+    <div className="flex items-center justify-between border-t border-slate-800 pt-4 max-w-3xl mx-auto w-full">
+      <button
+        type="button"
+        disabled={isFirstStep}
+        onClick={() => setCurrentStepIndex((prev) => prev - 1)}
+        className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+      >
+        ← Previous
+      </button>
+
+      {isLastStep ? (
         <button
           type="button"
-          disabled={isFirstStep}
-          onClick={() => setCurrentStepIndex((prev) => prev - 1)}
-          className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          onClick={onClose}
+          className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition-colors cursor-pointer"
         >
-          ← Previous
+         Finish Cooking
         </button>
-
-        {isLastStep ? (
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition-colors"
-          >
-            🎉 Finish Cooking
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setCurrentStepIndex((prev) => prev + 1)}
-            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-colors"
-          >
-            Next Step →
-          </button>
-        )}
-      </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setCurrentStepIndex((prev) => prev + 1)}
+          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-colors cursor-pointer"
+        >
+          Next Step →
+        </button>
+      )}
     </div>
-  );
+  </div>
+);
 }

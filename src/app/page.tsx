@@ -148,6 +148,7 @@ return (
         <CookingMode
           recipeTitle={recipe.title || "Recipe"}
           instructions={recipe.instructions}
+          ingredients={recipe.ingredients}
           onClose={() => setIsCookingMode(false)}
         />
       )}

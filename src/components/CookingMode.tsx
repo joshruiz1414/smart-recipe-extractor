@@ -9,9 +9,93 @@ interface CookingModeProps {
   onClose: () => void;
 }
 
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 
 export function CookingMode({ recipeTitle, instructions, ingredients, onClose }: CookingModeProps) {
+
+
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    if (!isVoiceEnabled) {
+      setIsListening(false);
+      return;
+    }
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      setIsVoiceEnabled(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => setIsListening(true);
+  // flag to know if the user intentionally closed Cooking Mode
+  let isComponentMounted = true;
+
+  recognition.onresult = (event: any) => {
+    const lastIndex = event.results.length - 1;
+    const transcript = event.results[lastIndex][0].transcript
+      .trim()
+      .toLowerCase();
+    console.log("Voice Command Recognized:", transcript);
+    if (transcript.includes("next")) {
+      setCurrentStepIndex((prev) => Math.min(prev + 1, instructions.length - 1));
+    } else if (transcript.includes("previous") || transcript.includes("back")) {
+      setCurrentStepIndex((prev) => Math.max(prev - 1, 0));
+    } else if (transcript.includes("repeat")) {
+      // pause recognition briefly while speaking to stop self triggering
+      recognition.stop();
+
+      const utterance = new SpeechSynthesisUtterance(instructions[currentStepIndex]);
+      utterance.onend = () => {
+        // resume listening once speech synthesis finishes
+        if (isComponentMounted) recognition.start();
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // auto restart if the browser stops listening unexpectedly, turn it right back on!
+  recognition.onend = () => {
+    setIsListening(false)
+    if (isComponentMounted && !window.speechSynthesis.speaking) {
+      try {
+        recognition.start();
+      } catch {
+        // prevent crashes if recognition is already starting
+      }
+    }
+  };
+
+  try {
+    recognition.start();
+  } catch (err) {
+    console.error("Speech recognition start error:", err);
+  }
+
+  return () => {
+    isComponentMounted = false;
+    recognition.stop();
+    window.speechSynthesis.cancel(); // stop speaking if closed
+  };
+}, [isVoiceEnabled, currentStepIndex, instructions]);
 
   const [showIngredients, setShowIngredients] = useState(true);
 
@@ -65,6 +149,12 @@ useEffect(() => {
 
 return (
   <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col justify-between p-6 sm:p-10">
+    {isListening && (
+  <span className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-3 py-1 rounded-full animate-pulse">
+    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+    Voice Control Active ("Next", "Back", "Repeat")
+  </span>
+)}
     {/* Top Header */}
     <div className="flex items-center justify-between border-b border-slate-800 pb-4">
       <div>
@@ -77,6 +167,21 @@ return (
       </div>
 
       <div className="flex items-center gap-2">
+
+      {/* voice control button */}
+      <button
+        type="button"
+        onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
+        className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer flex items-center gap-1.5 ${
+          isVoiceEnabled
+            ? "bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-emerald-800"
+            : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"
+        }`}
+      >
+      <span className={`w-2 h-2 rounded-full ${isListening ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
+      {isVoiceEnabled ? "🎙️ Voice On" : "🎙️ Enable Voice"}
+    </button>
+      {/*show ingredients button*/}
         <button
           type="button"
           onClick={() => setShowIngredients(!showIngredients)}

@@ -70,6 +70,26 @@ export function CookingMode({ recipeTitle, instructions, ingredients, onClose }:
 
       window.speechSynthesis.speak(utterance);
     }
+    else if (
+      transcript.includes("show ingredients")
+    ) {
+      setShowIngredients(true)
+    }
+    else if (
+      transcript.includes("hide ingredients")
+    ) {
+      setShowIngredients(false)
+    }
+    else if (
+    transcript.includes("exit") ||
+    transcript.includes("close cooking mode") ||
+    transcript.includes("cancel cooking mode") ||
+    transcript.includes("stop cooking")
+  ) {
+    recognition.stop();
+    window.speechSynthesis.cancel();
+    onClose(); // <-- Same callback function as "✕ Exit" button
+  }
   };
 
   // auto restart if the browser stops listening unexpectedly, turn it right back on!
@@ -152,7 +172,7 @@ return (
     {isListening && (
   <span className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-3 py-1 rounded-full animate-pulse">
     <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-    Voice Control Active ("Next", "Back", "Repeat")
+    Voice Control Active ("Next", "Back", "Repeat", "Show/Hide Ingredients", "Exit/Cancel Cooking Mode")
   </span>
 )}
     {/* Top Header */}

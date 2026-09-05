@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     $("script, style, nav, footer, iframe, noscript").remove();
     const cleanedText = $("body").text().replace(/\s+/g, " ").slice(0, 10000);
 
-    const prompt = `Extract the recipe from this web page content. Return strict JSON with fields "title", "ingredients" (array of strings), and "instructions" (array of strings in order).\n\nText:\n${cleanedText}`;
+    const prompt = `Extract the recipe from this web page content make sure to include ingredient measurements. Return strict JSON with fields "title", "ingredients" (array of strings), and "instructions" (array of strings in order).\n\nText:\n${cleanedText}`;
 
     const aiResponse = await ai.models.generateContent({
       model: "gemini-3.5-flash",

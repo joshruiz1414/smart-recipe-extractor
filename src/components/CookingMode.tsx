@@ -90,6 +90,16 @@ export function CookingMode({ recipeTitle, instructions, ingredients, onClose }:
     window.speechSynthesis.cancel();
     onClose(); // <-- Same callback function as "✕ Exit" button
   }
+  else if (
+    transcript.includes("disable voice") ||
+    transcript.includes("turn off voice") ||
+    transcript.includes("stop listening") ||
+    transcript.includes("mute voice")
+  ) {
+    recognition.stop();
+    window.speechSynthesis.cancel();
+    setIsVoiceEnabled(false);
+  }
   };
 
   // auto restart if the browser stops listening unexpectedly, turn it right back on!
@@ -172,7 +182,7 @@ return (
     {isListening && (
   <span className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-3 py-1 rounded-full animate-pulse">
     <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-    Voice Control Active ("Next", "Back", "Repeat", "Show/Hide Ingredients", "Exit/Cancel Cooking Mode")
+    Voice Control Active ("Next", "Back", "Repeat", "Show/Hide Ingredients", "Exit/Cancel Cooking Mode", "Disable Voice")
   </span>
 )}
     {/* Top Header */}
@@ -212,7 +222,7 @@ return (
         <button
           type="button"
           onClick={onClose}
-          className="px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors cursor-pointer"
+          className="px-4 py-2 text-sm bg-rose-950 hover:bg-rose-900 text-rose-300 rounded border border-rose-800 transition-colors cursor-pointer"
         >
           ✕ Exit
         </button>

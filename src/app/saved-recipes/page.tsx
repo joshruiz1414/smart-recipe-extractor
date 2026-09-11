@@ -22,12 +22,12 @@ export default async function SavedRecipesPage() {
   return (
 <main className="max-w-4xl mx-auto p-6 space-y-6">
 
-<div className="flex w-full items-center gap-10">
-  <h1 className="text-2xl font-bold">Your Saved Recipes</h1>
-  <Link href="/" className="ml-auto text-sm px-3 py-1.5 rounded-md border border-neutral-300 hover:bg-neutral-100 light:border-neutral-700 dark:hover:bg-neutral-800">
-    ← Back to Extractor
-  </Link>
-</div>
+    <div className="flex w-full items-center gap-9">
+    <h1 className="text-2xl font-bold">Your Saved Recipes</h1>
+    <Link href="/" className="ml-auto text-sm px-3 py-1.5 rounded-md border border-neutral-300 hover:bg-neutral-100 light:border-neutral-700 dark:hover:bg-neutral-800">
+        ← Back to Extractor
+    </Link>
+    </div>
       {recipes.length === 0 ? (
         <p className="text-neutral-500">You haven't saved any recipes yet.</p>
       ) : (

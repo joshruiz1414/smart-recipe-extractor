@@ -5,6 +5,7 @@ import { IngredientList } from "@/components/IngredientList";
 import { Instructions } from "@/components/Instructions";
 import { UrlForm } from "@/components/UrlForm";
 import { CookingMode } from "@/components/CookingMode";
+import { saveRecipe } from "@/app/actions"
 
 import { Session } from "next-auth"
 
@@ -16,16 +17,19 @@ interface Recipe {
   title: string;
   ingredients: string[];
   instructions: string[];
+  url: string;
+  sourceUrl: string;
 }
 
 export function RecipeExtractor({ session }: RecipeExtractorProps) {
+
 
   const isAuthenticated = !!session?.user
   const userEmail = session?.user?.email
 
   const [url, setUrl] = useState("");
   const [submittedUrl, setSubmittedUrl] = useState("");
-  // use null because we don't have recipe data yet
+
   // now recipe can be null or Recipe object
   const [recipe, setRecipe] = useState<Recipe | null>(null);
 
@@ -41,6 +45,9 @@ export function RecipeExtractor({ session }: RecipeExtractorProps) {
 
   const [isCookingMode, setIsCookingMode] = useState(false);
 
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<string | null>(null)
+
   // clear function to reset everything
   const handleClear = () => {
     setUrl("");
@@ -49,6 +56,7 @@ export function RecipeExtractor({ session }: RecipeExtractorProps) {
     setIsConfirmed(null);
     setCheckedIngredients({})
     setShowWarning(false)
+    setSaveStatus(null)
   };
   // confirm recipe function
   const handleConfirmRecipe = (confirmed: boolean) => {
@@ -57,6 +65,7 @@ export function RecipeExtractor({ session }: RecipeExtractorProps) {
       // if user says "No", clear the recipe and prompt them to try another link
       setError("Please check the URL and try extracting again.");
       setRecipe(null);
+      setSaveStatus(null)
     }
   };
 
@@ -93,6 +102,7 @@ export function RecipeExtractor({ session }: RecipeExtractorProps) {
   const startCookingMode = () => {
     setShowWarning(false);
     setIsCookingMode(true);
+    setSaveStatus(null)
   };
 
   const handleCopyIngredients = () => {
@@ -102,6 +112,42 @@ export function RecipeExtractor({ session }: RecipeExtractorProps) {
     navigator.clipboard.writeText(textToCopy);
 
   };
+
+
+
+    const handleSave = async () => {
+    if (!session?.user) {
+      alert("Please sign in to save recipes.")
+      return
+    }
+
+    if (!recipe) return
+
+    try {
+      setIsSaving(true)
+      setSaveStatus(null)
+
+      const result = await saveRecipe({
+        title: recipe.title,
+        sourceUrl: recipe.url || "",
+        ingredients: recipe.ingredients,
+        instructions: recipe.instructions,
+      })
+
+if (result.success) {
+      setSaveStatus("Saved!")
+    } else if (result.error === "ALREADY_SAVED") {
+      setSaveStatus("Already Saved")
+    } else {
+      setSaveStatus("Failed to save")
+    }
+  } catch (error) {
+    console.error("Network or unexpected error:", error)
+    setSaveStatus("Failed to save")
+  } finally {
+    setIsSaving(false)
+  }
+  }
 
   const handleSubmit = async (submittedUrl: string) => {
     setSubmittedUrl(submittedUrl);
@@ -114,7 +160,7 @@ export function RecipeExtractor({ session }: RecipeExtractorProps) {
     setShowWarning(false)
 
     try {
-    // send POST request to our API endpoint
+    // send POST request to API endpoint
     const response = await fetch("/api/parse-recipe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -138,6 +184,7 @@ export function RecipeExtractor({ session }: RecipeExtractorProps) {
     // always stop loading, whether it succeeded or failed
     setLoading(false);
   }
+
 };
 
 return (
@@ -189,6 +236,18 @@ return (
           >
             Clear Recipe
           </button>
+          {/* save recipe button */}
+            <button
+              onClick={handleSave}
+              disabled={isSaving || saveStatus === "Saved!"}
+              className={`px-4 py-2 text-sm font-medium rounded-md text-white transition ${
+                saveStatus === "Saved!"
+                  ? "bg-green-600 cursor-default"
+                  : "bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+              }`}
+            >
+              {isSaving ? "Saving..." : saveStatus || "Save Recipe"}
+            </button>
         </div>
 
         {/* asks "Is this correct recipe" */}

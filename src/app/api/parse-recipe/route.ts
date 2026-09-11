@@ -4,11 +4,11 @@ import * as cheerio from "cheerio";
 import he from "he"
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-interface RecipeData {
+ interface RecipeData {
   title: string;
   ingredients: string[];
   instructions: string[];
+  url: string
 }
 
 export async function POST(req: NextRequest) {
@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
             title: recipeNode.name || "Untitled Recipe",
             ingredients: ingredients || [],
             instructions: instructions,
+            url: url
           };
         }
       } catch {

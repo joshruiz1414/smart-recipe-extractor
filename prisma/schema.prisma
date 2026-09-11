@@ -51,7 +51,7 @@ model SavedRecipe {
   id           String   @id @default(cuid())
   userId       String
   title        String
-  sourceUrl    String
+  sourceUrl    String?
   ingredients  String[]
   instructions String[]
   createdAt    DateTime @default(now())

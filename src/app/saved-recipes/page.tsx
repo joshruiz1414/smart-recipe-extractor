@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import { DeleteRecipeButton } from "@/components/DeleteRecipe"
 
 export default async function SavedRecipesPage() {
   const session = await auth()
@@ -35,6 +36,13 @@ export default async function SavedRecipesPage() {
           {recipes.map((recipe) => (
             <div key={recipe.id} className="p-4 border rounded-lg shadow-sm space-y-2">
               <h2 className="font-semibold text-lg">{recipe.title}</h2>
+              <DeleteRecipeButton recipeId={recipe.id} />
+            <Link
+            href={`/?savedId=${recipe.id}`}
+            className="text-xs px-2.5 py-1 text-indigo-600 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 dark:bg-indigo-950/50 dark:border-indigo-900/50 dark:text-indigo-300 transition"
+            >
+            Use Recipe
+            </Link>
               <a
                 href={recipe.sourceUrl}
                 target="_blank"

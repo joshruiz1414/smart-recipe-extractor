@@ -12,6 +12,55 @@ export async function handleSignOut() {
     await signOut()
 }
 
+export async function deleteRecipe(recipeId: string) {
+  const session = await auth()
+
+  if (!session?.user?.id) {
+    return { success: false, error: "UNAUTHORIZED" }
+  }
+
+  try {
+    await prisma.savedRecipe.deleteMany({
+      where: {
+        id: recipeId,
+        userId: session.user.id,
+      },
+    })
+
+    revalidatePath("/saved-recipes")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting recipe:", error)
+    return { success: false, error: "FAILED_TO_DELETE" }
+  }
+}
+
+export async function getSavedRecipeById(recipeId: string) {
+  const session = await auth()
+
+  if (!session?.user?.id) {
+    return { success: false, error: "UNAUTHORIZED" }
+  }
+
+  try {
+    const recipe = await prisma.savedRecipe.findFirst({
+      where: {
+        id: recipeId,
+        userId: session.user.id,
+      },
+    })
+
+    if (!recipe) {
+      return { success: false, error: "NOT_FOUND" }
+    }
+
+    return { success: true, recipe }
+  } catch (error) {
+    console.error("Error fetching saved recipe:", error)
+    return { success: false, error: "SERVER_ERROR" }
+  }
+}
+
 export async function saveRecipe(data: {
     title: string
     sourceUrl?: string

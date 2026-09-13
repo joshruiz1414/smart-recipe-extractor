@@ -233,7 +233,12 @@ return (
       <h1 className="text-3xl font-bold text-blue-600 mb-2">Smart Recipe Extractor</h1>
       <p className="text-white-600 mb-6">Paste any recipe link below to pull out clean ingredients and instructions.</p>
       {/* link input form */}
-      <UrlForm onSubmit={handleSubmit} loading={loading} />
+      <UrlForm
+        sourceUrl={submittedUrl}
+        setUrl={setSubmittedUrl}
+        onSubmit={handleSubmit}
+        loading={loading}
+      />
 
       {/* error message display */}
       {error && (

@@ -3,16 +3,17 @@
 import { useState } from "react";
 
 interface UrlFormProps {
+  sourceUrl: string;
+  setUrl: (url: string) => void;
   onSubmit: (url: string) => void;
   loading: boolean;
 }
-export function UrlForm({onSubmit, loading}: UrlFormProps){
-    const [url, setUrl] = useState("");
+export function UrlForm({sourceUrl, setUrl, onSubmit, loading}: UrlFormProps){
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!url.trim()) return;
-        onSubmit(url);
+        if (!sourceUrl.trim()) return;
+        onSubmit(sourceUrl);
     }
 
 return(
@@ -21,7 +22,7 @@ return(
           type="url"
           required
           placeholder="https://www.recipes.com/recipe/..."
-          value={url}
+          value={sourceUrl}
           onChange={(e) => setUrl(e.target.value)}
           className="flex-1 p-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
         />

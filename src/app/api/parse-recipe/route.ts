@@ -1,14 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import * as cheerio from "cheerio";
-import he from "he"
+import he from "he";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
- interface RecipeData {
+
+interface RecipeData {
   title: string;
   ingredients: string[];
   instructions: string[];
-  url: string
+  url: string;
+}
+
+// helper to recursively flatten complex HowToSection / HowToStep arrays in JSON-LD
+function parseInstructionsFromSchema(rawInstructions: any): string[] {
+  if (!rawInstructions) return [];
+
+  const steps: string[] = [];
+
+  const extract = (item: any) => {
+    if (typeof item === "string") {
+      steps.push(item);
+    } else if (Array.isArray(item)) {
+      item.forEach(extract);
+    } else if (typeof item === "object" && item !== null) {
+      if (item.text) {
+        steps.push(item.text);
+      } else if (item.name && item["@type"] === "HowToStep") {
+        steps.push(item.name);
+      }
+      if (Array.isArray(item.itemListElement)) {
+        item.itemListElement.forEach(extract);
+      }
+    }
+  };
+
+  extract(rawInstructions);
+
+  return steps
+    .filter(Boolean)
+    .map((step) => he.decode(step).trim());
 }
 
 export async function POST(req: NextRequest) {
@@ -40,57 +71,59 @@ export async function POST(req: NextRequest) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    // try JSON-LD parsing first
     let extractedRecipe: RecipeData | null = null;
-    $('script[type="application/ld+json"]').each((_, el) => {
+
+
+    const jsonLdScripts = $('script[type="application/ld+json"]').toArray();
+
+    for (const el of jsonLdScripts) {
       try {
-        const json = JSON.parse($(el).html() || "");
-        const graph = Array.isArray(json) ? json : json["@graph"] || [json];
+        const content = $(el).html();
+        if (!content) continue;
+
+        const json = JSON.parse(content);
+        const graph: any[] = Array.isArray(json)
+          ? json
+          : json["@graph"] || [json];
+
         const recipeNode = graph.find(
-          (item: { "@type": string | string[] }) =>
-            item["@type"] === "Recipe" ||
-            (Array.isArray(item["@type"]) && item["@type"].includes("Recipe"))
+          (item: any) =>
+            item?.["@type"] === "Recipe" ||
+            (Array.isArray(item?.["@type"]) && item["@type"].includes("Recipe"))
         );
 
         if (recipeNode) {
-          const rawInstructions = recipeNode.recipeInstructions || [];
-            const parsedInstructions = Array.isArray(rawInstructions)
-              ? rawInstructions.map((step: string | { text: string }) =>
-                  typeof step === "string" ? step : step.text || ""
-                )
-              : typeof rawInstructions === "string"
-              ? [rawInstructions]
-              : [];
-
-            const instructions = parsedInstructions
-              .filter(Boolean)
-              .map((step: string) => he.decode(step).trim());
-
-            const ingredients = (recipeNode.recipeIngredient || []).map((item: string) =>
-              he.decode(item).trim()
-            );
+          const instructions = parseInstructionsFromSchema(recipeNode.recipeInstructions);
+          const rawIngredients: string[] = recipeNode.recipeIngredient || [];
+          const ingredients = rawIngredients.map((item: string) => he.decode(item).trim());
 
           extractedRecipe = {
-            title: recipeNode.name || "Untitled Recipe",
-            ingredients: ingredients || [],
+            title: recipeNode.name ? he.decode(recipeNode.name).trim() : "Untitled Recipe",
+            ingredients: ingredients,
             instructions: instructions,
-            url: url
+            url: url,
           };
+          break;
         }
       } catch {
-        // ignore JSON parse errors for invalid scripts
+        // ignore invalid JSON script tags
       }
-    });
+    }
 
-    if (extractedRecipe) {
+    // return early if JSON-LD successfully captured both parts
+    if (
+      extractedRecipe &&
+      extractedRecipe.ingredients.length > 0 &&
+      extractedRecipe.instructions.length > 0
+    ) {
       return NextResponse.json({ source: "json-ld", recipe: extractedRecipe });
     }
 
-    // fallback to Gemini AI if JSON-LD metadata wasn't found
+    // AI Fallback if JSON-LD was incomplete or missing
     $("script, style, nav, footer, iframe, noscript").remove();
     const cleanedText = $("body").text().replace(/\s+/g, " ").slice(0, 10000);
 
-    const prompt = `Extract the recipe from this web page content make sure to include ingredient measurements. Return strict JSON with fields "title", "ingredients" (array of strings), and "instructions" (array of strings in order).\n\nText:\n${cleanedText}`;
+    const prompt = `Extract the full recipe from this content including measurements and step-by-step instructions. Return strict JSON with fields "title" (string), "ingredients" (array of strings), and "instructions" (array of detailed instruction strings in order).\n\nText:\n${cleanedText}`;
 
     const aiResponse = await ai.models.generateContent({
       model: "gemini-3.5-flash",
@@ -109,7 +142,23 @@ export async function POST(req: NextRequest) {
     }
 
     const parsedAiRecipe: RecipeData = JSON.parse(aiText);
-    return NextResponse.json({ source: "ai", recipe: parsedAiRecipe });
+
+    const currentExtracted: RecipeData | null = extractedRecipe;
+
+    const finalRecipe: RecipeData = {
+      title: currentExtracted?.title || parsedAiRecipe.title || "Untitled Recipe",
+      ingredients:
+        currentExtracted && currentExtracted.ingredients.length > 0
+          ? currentExtracted.ingredients
+          : parsedAiRecipe.ingredients,
+      instructions:
+        currentExtracted && currentExtracted.instructions.length > 0
+          ? currentExtracted.instructions
+          : parsedAiRecipe.instructions,
+      url: url,
+    };
+
+    return NextResponse.json({ source: "ai", recipe: finalRecipe });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal Server Error";
     return NextResponse.json({ error: message }, { status: 500 });

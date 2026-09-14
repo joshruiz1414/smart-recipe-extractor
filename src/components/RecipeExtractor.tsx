@@ -217,21 +217,29 @@ if (result.success) {
 };
 
 return (
-  <div className="space-y-6">
-      {/* Gate specific features based on auth status */}
-      {isAuthenticated ? (
-        <p className="text-sm text-green-600">
-          Logged in as {userEmail}. Saved recipes will sync to your account.
-        </p>
-      ) : (
-        <p className="text-sm text-amber-600">
-          You are using guest mode. Sign in to save extracted recipes.
-        </p>
-      )}
+  <div className="w-full space-y-6">
+    {/* auth Banner */}
+    {isAuthenticated ? (
+      <p className="text-sm text-emerald-600 bg-emerald-950/20 p-3 rounded-lg border border-emerald-900/50">
+        Logged in as <span className="font-semibold">{userEmail}</span>. Saved recipes will sync to your account.
+      </p>
+    ) : (
+      <p className="text-sm text-amber-500 bg-amber-950/20 p-3 rounded-lg border border-amber-900/50">
+        You are using guest mode. Sign in to save extracted recipes.
+      </p>
+    )}
 
-    <main className="max-w-3xl mx-auto p-8 font-sans">
-      <h1 className="text-3xl font-bold text-blue-600 mb-2">Smart Recipe Extractor</h1>
-      <p className="text-white-600 mb-6">Paste any recipe link below to pull out clean ingredients and instructions.</p>
+    {/* main container*/}
+    <div className="w-full max-w-3xl mx-auto px-2 sm:px-6 py-4 font-sans space-y-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-blue-500 tracking-tight">
+          Smart Recipe Extractor
+        </h1>
+        <p className="text-slate-400 text-sm sm:text-base">
+          Paste any recipe link below to pull out clean ingredients and instructions.
+        </p>
+      </div>
+
       {/* link input form */}
       <UrlForm
         sourceUrl={submittedUrl}
@@ -242,12 +250,12 @@ return (
 
       {/* error message display */}
       {error && (
-        <div className="p-4 bg-red-100 border border-red-300 text-red-800 rounded-md mb-4">
+        <div className="p-4 bg-rose-950/80 border border-rose-800 text-rose-200 text-sm rounded-lg">
           <strong>Error:</strong> {error}
         </div>
       )}
 
-      {/* recipe output card */}
+      {/* cooking mode */}
       {isCookingMode && recipe && (
         <CookingMode
           recipeTitle={recipe.title || "Recipe"}
@@ -256,107 +264,115 @@ return (
           onClose={() => setIsCookingMode(false)}
         />
       )}
+
+      {/* recipe output card */}
       {recipe && (
+        <div className="border border-indigo-900/80 rounded-xl p-4 sm:p-6 bg-slate-950 text-slate-100 shadow-xl space-y-6">
 
-      <div className="border border-indigo-700 rounded-lg p-6 bg-slate-950 text-slate-100 shadow-xl space-y-6">
-
-        {/* Clear Button */}
-        <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-4">
-          <h2 className="text-2xl font-bold text-slate-100">{recipe.title}</h2>
-          <button
-            type="button"
-            onClick={handleClear}
-            className="text-xs px-3 py-1.5 bg-rose-950 hover:bg-rose-900 text-rose-300 rounded border border-rose-800 transition-colors cursor-pointer"
-          >
-            Clear Recipe
-          </button>
-          {/* save recipe button */}
-            <button
-              onClick={handleSave}
-              disabled={isSaving || saveStatus === "Saved!"}
-              className={`px-4 py-2 text-sm font-medium rounded-md text-white transition ${
-                saveStatus === "Saved!"
-                  ? "bg-green-600 cursor-default"
-                  : "bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-              }`}
-            >
-              {isSaving ? "Saving..." : saveStatus || "Save Recipe"}
-            </button>
-        </div>
-
-        {/* asks "Is this correct recipe" */}
-        {isConfirmed === null && (
-          <div className="p-3.5 bg-indigo-950/70 border border-indigo-800 rounded-lg flex items-center justify-between gap-3 text-sm">
-            <span className="text-indigo-200">Is this the correct recipe you were looking for?</span>
-            <div className="flex gap-2">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-100 break-words">
+              {recipe.title}
+            </h2>
+            <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
               <button
                 type="button"
-                onClick={() => handleConfirmRecipe(true)}
-                className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded transition-colors cursor-pointer text-xs"
+                onClick={handleClear}
+                className="text-xs px-3 py-2 bg-rose-950 hover:bg-rose-900 text-rose-300 rounded-md border border-rose-800 transition-colors cursor-pointer"
               >
-                Yes, looks good!
+                Clear Recipe
               </button>
               <button
                 type="button"
-                onClick={() => handleConfirmRecipe(false)}
-                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition-colors cursor-pointer text-xs"
+                onClick={handleSave}
+                disabled={isSaving || saveStatus === "Saved!"}
+                className={`px-3 py-2 text-xs font-semibold rounded-md text-white transition cursor-pointer ${
+                  saveStatus === "Saved!"
+                    ? "bg-emerald-600 cursor-default"
+                    : "bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                }`}
               >
-                No, try again
+                {isSaving ? "Saving..." : saveStatus || "Save Recipe"}
               </button>
             </div>
           </div>
-        )}
 
-        {/* show confirmation badge once verified */}
-        {isConfirmed === true && (
-        <div className="flex flex-col items-center justify-center gap-3 border-b border-slate-800 pb-4 text-center">
-          <button
-            type="button"
-            onClick={handleBeginCooking}
-            className="text-xl px-3 py-1.5 bg-green-950 hover:bg-green-900 text-emerald-400 rounded border border-green-800 transition-colors cursor-pointer"
-          >
-            Begin Cooking!
-          </button>
-          <h2 className="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
-            ✓ Recipe Verified
-          </h2>
-          {/* warning for unchecked ingredients */}
-          {showWarning && (
-            <div className="p-4 bg-amber-950/80 border border-amber-800 rounded-lg space-y-3 text-amber-200 text-sm animate-fade-in">
-              <p className="font-medium">
-                ⚠️ You have <span className="font-bold underline">{uncheckedCount} missing ingredient{uncheckedCount > 1 ? "s" : ""}</span> that haven't been checked off! Do you still want to continue?
-              </p>
-              <div className="flex gap-2">
+          {/* ask if "Is this correct recipe" */}
+          {isConfirmed === null && (
+            <div className="p-4 bg-indigo-950/70 border border-indigo-800 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+              <span className="text-indigo-200">Is this the correct recipe you were looking for?</span>
+              <div className="flex gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={startCookingMode}
-                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-semibold rounded text-xs transition-colors cursor-pointer"
+                  onClick={() => handleConfirmRecipe(true)}
+                  className="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded transition-colors cursor-pointer text-xs"
                 >
-                  Yes, Continue Anyway
+                  Yes, looks good!
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowWarning(false)}
-                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 text-xs transition-colors cursor-pointer"
+                  onClick={() => handleConfirmRecipe(false)}
+                  className="flex-1 sm:flex-none px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition-colors cursor-pointer text-xs"
                 >
-                  Go Back & Check List
+                  No, try again
                 </button>
               </div>
             </div>
           )}
-        </div>
 
-        )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+          {/* verified Badge & Cooking Start */}
+          {isConfirmed === true && (
+            <div className="flex flex-col items-center justify-center gap-3 border-b border-slate-800 pb-4 text-center">
+              <button
+                type="button"
+                onClick={handleBeginCooking}
+                className="w-full sm:w-auto text-lg sm:text-xl px-6 py-2.5 bg-emerald-950 hover:bg-emerald-900 text-emerald-400 font-bold rounded-lg border border-emerald-800 transition-colors cursor-pointer"
+              >
+                Begin Cooking!
+              </button>
+              <h2 className="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
+                ✓ Recipe Verified
+              </h2>
 
-          <IngredientList ingredients={recipe.ingredients}
-          checkedIngredients={checkedIngredients}
-          onToggleIngredient={handleToggleIngredient} />
-          <Instructions instructions={recipe.instructions} />
+              {/* warning for unchecked ingredients */}
+              {showWarning && (
+                <div className="w-full p-4 bg-amber-950/90 border border-amber-800 rounded-lg space-y-3 text-amber-200 text-sm animate-fade-in text-left">
+                  <p className="font-medium">
+                    ⚠️ You have <span className="font-bold underline">{uncheckedCount} missing ingredient{uncheckedCount > 1 ? "s" : ""}</span> that haven't been checked off! Do you still want to continue?
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={startCookingMode}
+                      className="w-full sm:w-auto px-4 py-2 bg-amber-600 hover:bg-amber-500 text-slate-950 font-semibold rounded text-xs transition-colors cursor-pointer"
+                    >
+                      Yes, Continue Anyway
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowWarning(false)}
+                      className="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 text-xs transition-colors cursor-pointer"
+                    >
+                      Go Back & Check List
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* side by side grid on desktop, single column stack on mobile */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mt-6">
+            <IngredientList
+              ingredients={recipe.ingredients}
+              checkedIngredients={checkedIngredients}
+              onToggleIngredient={handleToggleIngredient}
+            />
+            <Instructions instructions={recipe.instructions} />
           </div>
         </div>
       )}
-    </main>
     </div>
-  );
+  </div>
+);
 }

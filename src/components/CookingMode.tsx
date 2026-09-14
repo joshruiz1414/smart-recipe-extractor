@@ -176,85 +176,91 @@ useEffect(() => {
   };
 }, []);
 
-
 return (
-  <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col justify-between p-6 sm:p-10">
+  <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col justify-between p-4 sm:p-8 min-h-dvh overflow-hidden">
+
+    {/* voice active banner */}
     {isListening && (
-  <span className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-3 py-1 rounded-full animate-pulse">
-    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-    Voice Control Active ("Next", "Back", "Repeat", "Show/Hide Ingredients", "Exit/Cancel Cooking Mode", "Disable Voice")
-  </span>
-)}
-    {/* Top Header */}
-    <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-      <div>
-        <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
+      <div className="mb-2 flex items-center justify-center shrink-0">
+        <span className="flex items-center gap-2 text-[10px] sm:text-xs text-emerald-400 bg-emerald-950/90 border border-emerald-800 px-3 py-1 rounded-full animate-pulse text-center max-w-full truncate">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+          <span className="truncate">Voice Control Active ("Next", "Back", "Repeat", "Show/Hide Ingredients", "Exit/Cancel Cooking Mode", "Disable Voice")</span>
+        </span>
+      </div>
+    )}
+
+    {/* top header */}
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-3 gap-3 shrink-0">
+      <div className="min-w-0 flex-1">
+        <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-indigo-400 block">
           Cooking Mode
         </span>
-        <h2 className="text-lg font-bold truncate max-w-xs sm:max-w-md text-slate-200">
+        <h2 className="text-base sm:text-lg font-bold truncate text-slate-200 max-w-full">
           {recipeTitle}
         </h2>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
+        {/* voice control button */}
+        <button
+          type="button"
+          onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
+          className={`px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors cursor-pointer flex items-center gap-1.5 ${
+            isVoiceEnabled
+              ? "bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-emerald-800"
+              : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"
+          }`}
+        >
+          <span className={`w-2 h-2 rounded-full ${isListening ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
+          {isVoiceEnabled ? "🎙️ Voice On" : "🎙️ Voice"}
+        </button>
 
-      {/* voice control button */}
-      <button
-        type="button"
-        onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
-        className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer flex items-center gap-1.5 ${
-          isVoiceEnabled
-            ? "bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-emerald-800"
-            : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"
-        }`}
-      >
-      <span className={`w-2 h-2 rounded-full ${isListening ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
-      {isVoiceEnabled ? "🎙️ Voice On" : "🎙️ Enable Voice"}
-    </button>
-      {/*show ingredients button*/}
+        {/* show ingredients button */}
         <button
           type="button"
           onClick={() => setShowIngredients(!showIngredients)}
-          className="px-3 py-1.5 text-xs bg-indigo-950 hover:bg-indigo-900 text-indigo-300 rounded border border-indigo-800 transition-colors cursor-pointer"
+          className="px-2.5 py-1.5 text-xs bg-indigo-950 hover:bg-indigo-900 text-indigo-300 rounded-md border border-indigo-800 transition-colors cursor-pointer"
         >
-          {showIngredients ? "Hide Ingredients" : "View Ingredients"}
+          {showIngredients ? "Hide Ingredients" : "Ingredients"}
         </button>
+
+        {/* exit Button */}
         <button
           type="button"
           onClick={onClose}
-          className="px-4 py-2 text-sm bg-rose-950 hover:bg-rose-900 text-rose-300 rounded border border-rose-800 transition-colors cursor-pointer"
+          className="px-3 py-1.5 text-xs bg-rose-950 hover:bg-rose-900 text-rose-300 rounded-md border border-rose-800 transition-colors cursor-pointer"
         >
           ✕ Exit
         </button>
       </div>
     </div>
-    {/* Center Section: Step Text + Ingredients Panel */}
-    <div className="max-w-8xl mx-auto w-full flex-1 flex flex-col sm:flex-row items-center justify-center gap-8 my-4 min-h-0 overflow-hidden">
 
-      {/* Step Text Container */}
-      <div className="flex-1 text-center space-y-6 overflow-y-auto max-h-[65vh] px-4">
-        <span className="inline-block px-3 py-1 bg-indigo-950 text-indigo-300 border border-indigo-800 rounded-full text-sm font-medium">
+    {/* center Section: step text adn ingredients panel */}
+    <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 my-3 min-h-0 overflow-hidden">
+
+      {/* step text container */}
+      <div className="flex-1 w-full text-center space-y-4 sm:space-y-6 overflow-y-auto min-h-0 px-2 sm:px-4 py-2 flex flex-col items-center justify-center">
+        <span className="inline-block px-3 py-1 bg-indigo-950 text-indigo-300 border border-indigo-800 rounded-full text-xs sm:text-sm font-medium shrink-0">
           Step {currentStepIndex + 1} of {instructions.length}
         </span>
 
-        <p className="text-2xl sm:text-4xl font-medium leading-relaxed text-slate-100">
+        <p className="text-xl sm:text-3xl md:text-4xl font-medium leading-relaxed text-slate-100 max-w-3xl">
           {currentStep}
         </p>
-
       </div>
 
-      {/* Slide out Ingredients Card */}
+      {/* slide out ingredients card */}
       {showIngredients && (
-        <div className="w-full sm:w-80 h-[55vh] max-h-[500px] bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col shrink-0 shadow-2xl">
-          <h3 className="text-sm font-semibold text-indigo-400 mb-3 border-b border-slate-800 pb-2 shrink-0">
-            All Ingredients ({ingredients.length})
+        <div className="w-full sm:w-80 h-48 sm:h-full max-h-[450px] bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col shrink-0 shadow-2xl min-h-0">
+          <h3 className="text-xs sm:text-sm font-semibold text-indigo-400 mb-2 border-b border-slate-800 pb-2 shrink-0">
+            Ingredients ({ingredients.length})
           </h3>
 
-          {/* Dedicated Scroll Container */}
-          <div className="flex-1 overflow-y-auto pr-2 space-y-2 text-sm text-slate-300 min-h-0">
-            <ul className="space-y-2.5">
+          {/* scroll container */}
+          <div className="flex-1 overflow-y-auto pr-1 space-y-2 text-xs sm:text-sm text-slate-300 min-h-0">
+            <ul className="space-y-2">
               {ingredients.map((item, idx) => (
-                <li key={idx} className="border-b border-slate-800/50 pb-2 last:border-0 leading-snug">
+                <li key={idx} className="border-b border-slate-800/50 pb-1.5 last:border-0 leading-snug">
                   • {item}
                 </li>
               ))}
@@ -264,13 +270,13 @@ return (
       )}
     </div>
 
-    {/* Bottom Controls */}
-    <div className="flex items-center justify-between border-t border-slate-800 pt-4 max-w-3xl mx-auto w-full">
+    {/* bottom navigation controls */}
+    <div className="flex items-center justify-between border-t border-slate-800 pt-3 sm:pt-4 max-w-3xl mx-auto w-full gap-3 shrink-0 pb-safe">
       <button
         type="button"
         disabled={isFirstStep}
         onClick={() => setCurrentStepIndex((prev) => prev - 1)}
-        className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+        className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-slate-800 hover:bg-slate-700 active:bg-slate-700 text-slate-200 text-sm sm:text-base font-semibold rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer text-center"
       >
         ← Previous
       </button>
@@ -279,15 +285,15 @@ return (
         <button
           type="button"
           onClick={onClose}
-          className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg transition-colors cursor-pointer"
+          className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-500 text-slate-950 text-sm sm:text-base font-bold rounded-xl transition-colors cursor-pointer text-center"
         >
-         Finish Cooking
+          Finish Cooking 🎉
         </button>
       ) : (
         <button
           type="button"
           onClick={() => setCurrentStepIndex((prev) => prev + 1)}
-          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-colors cursor-pointer"
+          className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-500 text-white text-sm sm:text-base font-bold rounded-xl transition-colors cursor-pointer text-center"
         >
           Next Step →
         </button>

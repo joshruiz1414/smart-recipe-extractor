@@ -21,43 +21,64 @@ export default async function SavedRecipesPage() {
   })
 
   return (
-<main className="max-w-4xl mx-auto p-6 space-y-6">
-
-    <div className="flex w-full items-center gap-9">
-    <h1 className="text-2xl font-bold">Your Saved Recipes</h1>
-    <Link href="/" className="ml-auto text-sm px-3 py-1.5 rounded-md border border-neutral-300 hover:bg-neutral-100 light:border-neutral-700 dark:hover:bg-neutral-800">
+  <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6 min-h-dvh overflow-x-hidden">
+    {/* header */}
+    <div className="flex flex-col sm:flex-row w-full sm:items-center justify-between gap-3 border-b pb-4 sm:pb-0 sm:border-0">
+      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        Your Saved Recipes
+      </h1>
+      <Link
+        href="/"
+        className="self-start sm:self-auto text-xs sm:text-sm px-3 py-2 rounded-md border border-neutral-300 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 transition-colors"
+      >
         ← Back to Extractor
-    </Link>
+      </Link>
     </div>
-      {recipes.length === 0 ? (
-        <p className="text-neutral-500">You haven't saved any recipes yet.</p>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {recipes.map((recipe) => (
-            <div key={recipe.id} className="p-4 border rounded-lg shadow-sm space-y-2">
-              <h2 className="font-semibold text-lg">{recipe.title}</h2>
-              <DeleteRecipeButton recipeId={recipe.id} />
-            <Link
-            href={`/?savedId=${recipe.id}`}
-            className="text-xs px-2.5 py-1 text-indigo-600 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 dark:bg-indigo-950/50 dark:border-indigo-900/50 dark:text-indigo-300 transition"
-            >
-            Use Recipe
-            </Link>
+
+    {recipes.length === 0 ? (
+      <p className="text-neutral-500 text-sm sm:text-base">
+        You haven't saved any recipes yet.
+      </p>
+    ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {recipes.map((recipe) => (
+          <div
+            key={recipe.id}
+            className="p-4 border rounded-xl shadow-sm space-y-3 bg-white dark:bg-slate-950 border-neutral-200 dark:border-neutral-800 flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <h2 className="font-bold text-lg text-neutral-900 dark:text-slate-100 leading-snug break-words">
+                {recipe.title}
+              </h2>
+
               <a
                 href={recipe.sourceUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="text-sm text-blue-600 hover:underline block truncate"
+                className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:underline block truncate max-w-full"
               >
                 {recipe.sourceUrl}
               </a>
-              <p className="text-xs text-neutral-400">
+
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 {recipe.ingredients.length} ingredients · {recipe.instructions.length} steps
               </p>
             </div>
-          ))}
-        </div>
-      )}
-    </main>
-  )
+
+            {/* actions footer*/}
+            <div className="flex items-center gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-900">
+              <Link
+                href={`/?savedId=${recipe.id}`}
+                className="inline-flex items-center justify-center text-xs px-3 py-2 font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-md hover:bg-indigo-100 dark:bg-indigo-950/60 dark:border-indigo-900/60 dark:text-indigo-300 transition-colors"
+              >
+                Use Recipe
+              </Link>
+              <DeleteRecipeButton recipeId={recipe.id} />
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </main>
+)
 }

@@ -252,6 +252,9 @@ return (
       {error && (
         <div className="p-4 bg-rose-950/80 border border-rose-800 text-rose-200 text-sm rounded-lg">
           <strong>Error:</strong> {error}
+        <p className="text-xs text-rose-300/80 border-t border-rose-800/60 pt-2">
+      💡 <strong>Tip:</strong> Please ensure the URL points to a publicly accessible recipe page and isn't behind a paywall, subscription, or strict anti-bot protection (e.g., heavily gated apps like allrecipes.com).
+        </p>
         </div>
       )}
 

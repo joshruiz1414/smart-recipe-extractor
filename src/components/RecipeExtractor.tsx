@@ -236,7 +236,7 @@ return (
           Smart Recipe Extractor
         </h1>
         <p className="text-slate-400 text-sm sm:text-base">
-          Paste any recipe link below to pull out clean ingredients and instructions.
+          Paste any valid non anti-bot recipe link below to pull out clean ingredients and instructions.
         </p>
       </div>
 
